@@ -52,7 +52,7 @@ jobs:
   #       docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.WEB_IMG_NAME }}:${{ github.sha }}
 
   deploy-container-to-eks:
-    needs: build-and-push-container
+    # needs: build-and-push-container
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout GitHub Action
