@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: todo-web
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -23,13 +23,13 @@ spec:
     spec:
       containers:
         - name: todo-web
-          image: kennedyuche/todo-app-web:v2
+          image: kennedyuche/todo-web:7833f99137cf0b96a44d4407603669a358eccbc4
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
-          # env:
-          #   - name: REACT_BASE_API_URL
-          #     value: http://todo-api-service.todo-api.svc:5000
+          env:
+            - name: REACT_BASE_API_URL
+              value: http://todo-api-service.todo-api.svc:5000
           resources:
             limits:
               cpu: 64m
