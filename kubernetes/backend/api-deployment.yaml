@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: todo-api
-          image: kennedyuche/todo-api:7833f99137cf0b96a44d4407603669a358eccbc4
+          image: kennedyuche/todo-api:568ecd4909e91bbdacd45495c62a6b6ae10bec4b
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
