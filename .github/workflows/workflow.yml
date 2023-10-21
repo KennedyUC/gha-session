@@ -25,7 +25,7 @@ jobs:
     - name: Create and populate .env file for api application
       run: |
         echo 'Creating .env file for the api application'
-        pushd "backend"; echo SECRET_KEY=${{ SECRET_KEY }} > .env; popd;
+        pushd "backend"; echo SECRET_KEY=${{ secrets.SECRET_KEY }} > .env; popd;
         pushd "backend"; echo POSTGRES_PORT=5432 >> .env; popd;
         pushd "backend"; echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env; popd;
         pushd "backend"; echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env; popd;
