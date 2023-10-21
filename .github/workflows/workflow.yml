@@ -1,0 +1,104 @@
+name: Demo Workflow 
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  API_IMG_NAME: todo-api
+  API_DOCKERFILE: Dockerfile.api
+  WEB_IMG_NAME: todo-web
+  WEB_DOCKERFILE: Dockerfile.web
+  API_DEPLOYMENT: todo-api
+  WEB_DEPLOYMENT: todo-web
+
+jobs:
+  build-and-push-container:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout GitHub Action
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create and populate .env file for api application
+      run: |
+        echo 'Creating .env file for the api application'
+        pushd "backend"; echo SECRET_KEY=${{ SECRET_KEY }} > .env; popd;
+        pushd "backend"; echo POSTGRES_PORT=5432 >> .env; popd;
+        pushd "backend"; echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env; popd;
+        pushd "backend"; echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env; popd;
+        pushd "backend"; echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env; popd;
+        pushd "backend"; echo DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ secrets.POSTGRES_SERVER }}:5432/${{ secrets.POSTGRES_DB }} >> .env; popd;
+        
+    - name: Create and populate .env file for web application
+      run: |
+        echo 'Creating .env file for the web application'
+        pushd "frontend"; echo REACT_BASE_API_URL=${{ secrets.API_URL }} > .env; popd;
+
+    - name: Build the api container image
+      run: |
+        docker build backend -f containers/${{ env.API_DOCKERFILE }} -t ${{ secrets.DOCKER_USERNAME }}/${{ env.API_IMG_NAME }}:${{ github.sha }}
+
+    - name: Build the web container image
+      run: |
+        docker build frontend -f containers/${{ env.WEB_DOCKERFILE }} -t ${{ secrets.DOCKER_USERNAME }}/${{ env.WEB_IMG_NAME }}:${{ github.sha }}
+
+    - name: Push the web and api images to the registry
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.API_IMG_NAME }}:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.WEB_IMG_NAME }}:${{ github.sha }}
+
+  # deploy-container-to-aks:
+  #   needs: build-and-push-container
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #   - name: Checkout GitHub Action
+  #     uses: actions/checkout@v3
+  #     with:
+  #       token: ${{ secrets.GITHUB_TOKEN }}
+
+  #   - name: Authenticate to Azure
+  #     run: |
+  #       az login --service-principal -u ${{ secrets.AZ_CLIENT_ID }} -p ${{ secrets.AZ_CLIENT_SECRET }} --tenant ${{ secrets.AZ_TENANT_ID }}
+
+  #   - name: Get kubernetes context
+  #     uses: azure/aks-set-context@v3
+  #     with:
+  #       resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+  #       cluster-name: ${{ env.CLUSTER_NAME }}
+
+  #   - name: Create namespace if doesn't exist
+  #     run: |
+  #       kubectl create namespace ${{ env.DEPLOYMENT_NAMESPACE }} --dry-run -o json | kubectl apply -f -
+
+  #   - name: Create imagepullsecret for Azure Container registry (ACR)
+  #     uses: azure/k8s-create-secret@v1
+  #     with:
+  #       container-registry-url: ${{ env.REGISTRY_NAME }}.azurecr.io
+  #       container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+  #       container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+  #       secret-name: ${{ env.REGISTRY_NAME }}-registry-connection
+  #       namespace: ${{ env.DEPLOYMENT_NAMESPACE }}
+
+  #   - name: Install yq for updating the kubernetes deployment manifest
+  #     run: |
+  #       sudo apt-get update
+  #       sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+  #       sudo chmod a+x /usr/local/bin/yq
+
+  #   - name: Update kubernetes deployment manifest
+  #     run: |
+  #       yq e -i '.spec.template.spec.containers[0].image = "${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.API_IMAGE_NAME }}:${{ github.sha }}"' ./deploy/base/manifests/backend/dsai-api-deployment.yaml
+
+  #   - name: Deploy application to AKS
+  #     uses: Azure/k8s-deploy@v4
+  #     with:
+  #       action: deploy
+  #       namespace: ${{ env.DEPLOYMENT_NAMESPACE }}
+  #       manifests: |
+  #         ./deploy/base/manifests/backend/
+  #       imagepullsecrets: |
+  #         ${{ env.REGISTRY_NAME }}-registry-connection
