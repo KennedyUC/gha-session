@@ -27,30 +27,30 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
-          env:
-            - name: POSTGRES_PORT
-              value: "5432"
-            - name: POSTGRES_DB
-              value: postgres
-            - name: POSTGRES_HOST
-              value: postgres-db.todo-api.svc
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: username
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: password
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: secret_key
-            - name: DATABASE_URL
-              value: postgresql://postgres:postgres@postgres-db.todo-api.svc:5432/postgres
+          # env:
+          #   - name: POSTGRES_PORT
+          #     value: "5432"
+          #   - name: POSTGRES_DB
+          #     value: postgres
+          #   - name: POSTGRES_HOST
+          #     value: postgres-db.todo-api.svc
+          #   - name: POSTGRES_USER
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: postgres-secret
+          #         key: username
+          #   - name: POSTGRES_PASSWORD
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: postgres-secret
+          #         key: password
+          #   - name: SECRET_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: postgres-secret
+          #         key: secret_key
+          #   - name: DATABASE_URL
+          #     value: postgresql://postgres:postgres@postgres-db.todo-api.svc:5432/postgres
           livenessProbe:
             httpGet:
               path: /api/v1/status
