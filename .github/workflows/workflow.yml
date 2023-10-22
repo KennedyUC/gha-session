@@ -79,9 +79,6 @@ jobs:
         sudo apt-get update
         sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
         sudo chmod a+x /usr/local/bin/
-        
-         docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.API_IMG_NAME }}:${{ github.sha }}
-        docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.WEB_IMG_NAME }}:${{ github.sha }}
 
     - name: Update kubernetes deployment manifest
       run: |
